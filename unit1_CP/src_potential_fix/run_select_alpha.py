@@ -64,7 +64,13 @@ def calc_per_word_log_evidence(estimator, word_list):
 
     # TODO Fit the estimator to the words
     # TODO Calculate the log evidence using provided formulas in CP1 spec
-    log_evidence = 0.0
+    estimator.fit(word_list)
+    log_evidence = gammaln(estimator.vocab.size*estimator.alpha)-gammaln(estimator.total_count+estimator.vocab.size*estimator.alpha)
+    gamma_alpha = gammaln(estimator.alpha)
+    for v in range(estimator.vocab.size):
+        log_evidence += gammaln(estimator.count_V[v]+estimator.alpha)
+    log_evidence -= estimator.vocab.size*gamma_alpha
+    
 
     # Return the per word log evidence
     return log_evidence / float(len(word_list))
@@ -114,6 +120,11 @@ if __name__ == '__main__':
         # TODO fit an estimator to each alpha value
         # TODO evaluate training set's log evidence at each alpha value
         # TODO evaluate test set's estimated probability via estimator's 'score'
+        for a, alpha in enumerate(alpha_list):
+            estimator = PosteriorPredictiveEstimator(vocab=vocab, alpha=alpha)
+            estimator.fit(train_word_list[:N])
+            train_log_ev_list[a] = calc_per_word_log_evidence(estimator, train_word_list[:N])
+            test_log_lik_list[a] = estimator.score(test_word_list)
 
         best_ii_test = np.argmax(test_log_lik_list)
         best_ii_train = np.argmax(train_log_ev_list)
@@ -135,8 +146,9 @@ if __name__ == '__main__':
         ax_grid[nn].set_ylim([-10.1, -6.6])
 
         # TODO add appropriate labels
-        ax_grid[nn].set_xlabel('TODO label x axis')
+        ax_grid[nn].set_xlabel(r'$\alpha$ (log spaced)')
         if nn == 0:
-            ax_grid[nn].set_ylabel('TODO label y axis')
+            ax_grid[nn].set_ylabel('log evidence')
     plt.tight_layout()
+    plt.savefig('2a.jpg')
     plt.show()

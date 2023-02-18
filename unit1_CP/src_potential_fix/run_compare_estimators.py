@@ -64,6 +64,24 @@ if __name__ == '__main__':
     # ---- fit MAP Estimator on train, then score it on test set
     # ---- fit PosteriorPredictive Estimator on train, then score it on test set
 
+    for i in range(len(frac_train_list)):
+        N = n_train_list[i]
+
+        train_set = train_word_list[:N]
+        
+        mle = MLEstimator(vocab, epsilon_unseen_proba)
+        mape = MAPEstimator(vocab, alpha)
+        ppe = PosteriorPredictiveEstimator(vocab, alpha)
+
+        mle.fit(train_set)
+        mape.fit(train_set)
+        ppe.fit(train_set)
+
+        mle_scores[i] = mle.score(test_word_list)
+        # print(mle_scores[i])
+        map_scores[i] = mape.score(test_word_list)
+        ppe_scores[i] = ppe.score(test_word_list)
+
     fig_h, ax_h = plt.subplots(nrows=1, ncols=1, squeeze=True, figsize=(6, 4))
     arange_list = np.arange(len(n_train_list))
     ax_h.plot(arange_list, mle_scores, 'm.-', label='ML estimator')
@@ -75,8 +93,9 @@ if __name__ == '__main__':
     ax_h.set_xlim([-0.05, 1.05*max(arange_list)])
     ax_h.set_ylim([-10.1, -6.6])
 
-    plt.xlabel("TODO fill xlabel")
-    plt.ylabel("TODO fill ylabel")
+    plt.xlabel("Amount of Available Training Data")
+    plt.ylabel("Per-wrod Log Probability")
     plt.legend(loc='lower right')
-    plt.tight_layout();
+    plt.tight_layout()
+    # plt.savefig('1a.jpg')
     plt.show()

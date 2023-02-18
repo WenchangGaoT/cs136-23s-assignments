@@ -79,6 +79,14 @@ class MAPEstimator():
         # TODO update total_count
         # TODO update the count_V array
 
+        for word in word_list:
+            self.total_count += 1
+            try:
+                self.count_V[self.vocab.get_word_id(word)] += 1
+            except:
+                raise KeyError("Word %s not in the vocabulary" % word)
+
+
     def predict_proba(self, word):
         ''' Predict probability of a given unigram under this model
 
@@ -99,10 +107,15 @@ class MAPEstimator():
         KeyError if the provided word is not in the vocabulary
         '''
         # TODO adjust if condition to avoid cases where valid MAP does not exist
-        if False:
+        if self.alpha <= 1:
             raise ValueError(
                 "Hyperparameter alpha does not yield valid MAP estimate")
         # TODO calculate MAP estimate of the provided word
+
+        try: word_id = self.vocab.get_word_id(word)
+        except: raise KeyError("Word %s not in the vocabulary" % word)
+
+        return (self.count_V[word_id]+self.alpha-1.)/(self.total_count+(self.alpha-1)*self.vocab.size)
         return 1.0 / self.vocab.size  # TODO change this placeholder!
 
     def score(self, word_list):
