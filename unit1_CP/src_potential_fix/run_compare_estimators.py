@@ -78,7 +78,8 @@ if __name__ == '__main__':
         ppe.fit(train_set)
 
         mle_scores[i] = mle.score(test_word_list)
-        # print(mle_scores[i])
+        print(N)
+        print(mle_scores[i])
         map_scores[i] = mape.score(test_word_list)
         ppe_scores[i] = ppe.score(test_word_list)
 

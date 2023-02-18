@@ -129,7 +129,7 @@ class MLEstimator():
 
         return (1.0-self.epsilon_unseen_proba)*n_v/self.total_count if n_v > 0 else self.epsilon_unseen_proba/self.unseen_count
 
-        # return 1.0 / self.vocab.size  # TODO change this placeholder!
+        return 1.0 / self.vocab.size  # TODO change this placeholder!
 
     def score(self, word_list):
         ''' Compute the average log probability of words in provided list
