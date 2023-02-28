@@ -103,8 +103,10 @@ class LinearRegressionMAPEstimator():
         '''
         M = self.feature_transformer.get_feature_size() # num features
         Phi_NM = self.feature_transformer.transform(x_ND)
+
         ## TODO update w_map_M attribute via formulas from Bishop
-        self.w_map_M = np.zeros(M)
+        self.w_map_M = np.dot(np.dot(np.linalg.inv(np.dot(Phi_NM.T, Phi_NM)+np.eye(M)*self.alpha/self.beta), Phi_NM.T), t_N)
+
         return self
 
 
@@ -124,8 +126,11 @@ class LinearRegressionMAPEstimator():
         '''
         phi_NM = self.feature_transformer.transform(x_ND)
         N, M = phi_NM.shape
+
         ## TODO compute mean prediction
-        return np.zeros(N)
+        mean = np.dot(phi_NM, self.w_map_M)
+        
+        return np.random.multivariate_normal(mean, np.eye(N)*1./self.beta, )
 
     def predict_variance(self, x_ND):
         ''' Produce predictive variance at each input feature
@@ -143,8 +148,10 @@ class LinearRegressionMAPEstimator():
         '''
         phi_NM = self.feature_transformer.transform(x_ND)
         N, M = phi_NM.shape
+
         ## TODO compute variance
-        return 0.05 * np.ones(N)
+
+        return 1./self.beta* np.ones(N)
 
 
     def score(self, x_ND, t_N):
