@@ -215,4 +215,8 @@ class LinearRegressionPosteriorPredictiveEstimator():
         N, M = phi_NM.shape
         
         ## TODO perform evidence calculation
-        return 0.0
+        A = self.alpha*np.eye(M) + self.beta*np.dot(phi_NM.T, phi_NM)
+        Emn = self.beta/2*np.sum((t_N-phi_NM*self.mean_M)**2) + self.alpha/2*np.sum(self.mean_M**2)
+
+
+        return M/2*np.log(self.alpha)+N/2*np.log(self.beta)-Emn-0.5*np.log(np.linalg.det(A))-0.5*np.log(2*np.pi)

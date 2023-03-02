@@ -132,8 +132,8 @@ if __name__ == '__main__':
 
 
     ## Finalize figure 2b
-    plt.xlabel('TODO fixme')
-    plt.ylabel('TODO fixme') 
+    plt.xlabel('Order')
+    plt.ylabel('Score') 
     plt.legend(loc='upper left')
     plt.ylim([-1.4, 0.1]) # don't touch these, should be just fine
     plt.tight_layout()
