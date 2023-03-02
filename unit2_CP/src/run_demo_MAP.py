@@ -62,7 +62,7 @@ if __name__ == '__main__':
         # Obtain predicted mean and stddev for MAP estimator
         # at each x value in provided dense grid of size G
         map_mean_G = map_estimator.predict(xgrid_G1)
-        map_stddev_G = np.ones(map_mean_G.size) # TODO FIXME predict_variance
+        map_stddev_G = map_estimator.predict_variance(xgrid_G1) # TODO FIXME predict_variance
 
         regr_viz_utils.plot_predicted_mean_with_filled_stddev_interval(
             cur_map_ax, # plot on MAP figure's current axes

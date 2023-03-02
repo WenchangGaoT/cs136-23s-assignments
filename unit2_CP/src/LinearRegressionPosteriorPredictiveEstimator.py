@@ -216,7 +216,10 @@ class LinearRegressionPosteriorPredictiveEstimator():
         
         ## TODO perform evidence calculation
         A = self.alpha*np.eye(M) + self.beta*np.dot(phi_NM.T, phi_NM)
-        Emn = self.beta/2*np.sum((t_N-phi_NM*self.mean_M)**2) + self.alpha/2*np.sum(self.mean_M**2)
+        Emn = self.beta/2*np.sum((t_N-np.matmul(phi_NM, self.mean_M))**2) + self.alpha/2*np.sum(self.mean_M**2)
+        ans = M/2*np.log(self.alpha)+N/2*np.log(self.beta)
+        ans = ans - Emn
+        ans = ans - 0.5*np.log(np.linalg.det(A))
+        ans = ans - 0.5*N*np.log(2*np.pi)
 
-
-        return M/2*np.log(self.alpha)+N/2*np.log(self.beta)-Emn-0.5*np.log(np.linalg.det(A))-0.5*np.log(2*np.pi)
+        return ans/N
