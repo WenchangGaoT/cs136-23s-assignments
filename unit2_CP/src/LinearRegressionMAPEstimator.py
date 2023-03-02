@@ -128,9 +128,9 @@ class LinearRegressionMAPEstimator():
         N, M = phi_NM.shape
 
         ## TODO compute mean prediction
-        mean = np.dot(phi_NM, self.w_map_M)
+        mean = np.matmul(phi_NM, self.w_map_M)
         
-        return np.random.multivariate_normal(mean, np.eye(N)*1./self.beta, )
+        return mean
 
     def predict_variance(self, x_ND):
         ''' Produce predictive variance at each input feature
