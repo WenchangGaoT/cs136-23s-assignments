@@ -70,14 +70,18 @@ if __name__ == '__main__':
                 LinearRegressionMAPEstimator(feature_transformer),
                 params_to_search,
                 cv=kfold_splitter, refit=True, 
-                scoring=None, return_train_score=True)
+                scoring=LinearRegressionMAPEstimator.score, return_train_score=True)
 
             # TODO Perform grid search on first N train points
             # Hint: call a method already provided by kfold_grid_searcher
+            kfold_grid_searcher.fit(x_train_ND[:N], t_train_N[:N])
+            kfold_grid_searcher.score(x_test_ND, t_test_N)
+            # kfold_grid_searcher.score()
 
             ## Select best scoring parameters
-            best_score = 0.0 # TODO FIXME get searcher's best score
-            best_estimator = default_estimator # TODO FIXME get searcher's best
+            best_score = kfold_grid_searcher.best_score_ # TODO FIXME get searcher's best score
+            # print(best_score)
+            best_estimator = kfold_grid_searcher.best_estimator_ # TODO FIXME get searcher's best
 
             estimator_per_order.append(best_estimator)
             score_per_order.append(best_score)            
