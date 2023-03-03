@@ -137,4 +137,5 @@ if __name__ == '__main__':
     plt.legend(loc='upper left')
     plt.ylim([-1.4, 0.1]) # don't touch these, should be just fine
     plt.tight_layout()
+    plt.savefig('2b.png')
     plt.show()

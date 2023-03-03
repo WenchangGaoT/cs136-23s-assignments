@@ -58,6 +58,7 @@ if __name__ == '__main__':
         map_estimator = LinearRegressionMAPEstimator(
             feature_transformer, alpha=alpha, beta=beta)
         map_estimator.fit(x_train_ND[:N], t_train_N[:N])
+        print(f'beta={beta}, score = {map_estimator.score(x_train_ND, t_train_N)}')
 
         # Obtain predicted mean and stddev for MAP estimator
         # at each x value in provided dense grid of size G
