@@ -33,17 +33,28 @@ def calc_joint_log_pdf(z_D, t_N, phi_NM, w_prior, v_prior):
         Log probability density function value at provided input
     '''
     N, M = phi_NM.shape
+    # print(v_prior)
 
     # Unpack vector z into constituent parts
-    w_M = z_D[:M]
-    v_M = z_D[M:]
+    w_M = z_D[:M, np.newaxis]
+    # print(w_M.shape)
+    v_M = z_D[M:, np.newaxis]
 
-    log_pdf_t = 0.0 # TODO compute likelhood log p(t_1, ... t_N | w, v)
+    mean, sigma = unpack_mean_N_and_stddev_N(z_D, phi_NM)
+
+    log_pdf_t = np.sum(scipy.stats.norm.logpdf(t_N, mean, sigma)) # TODO compute likelhood log p(t_1, ... t_N | w, v)
+    # print(log_pdf_t.shape)
     # HINT: use provided function unpack_mean_N_and_stddev_N
 
-    log_pdf_w = 0.0 # TODO compute prior log p(w)
+    # print(log_pdf_t.shape)
+
+    log_pdf_w = np.sum(scipy.stats.norm.logpdf(w_M, w_prior['mean'], np.ones(M)*w_prior['stddev'])) # TODO compute prior log p(w)
+    # if M > 1:
+    #     log_pdf_w += scipy.stats.norm.logpdf(w_M[1:], 0, w_prior['stddev'])
     
-    log_pdf_v = 0.0 # TODO compute prior log p(v)
+    log_pdf_v = np.sum(scipy.stats.norm.logpdf(v_M, v_prior['mean'], np.ones(M)*v_prior['stddev'])) # TODO compute prior log p(v)
+    # if M > 1:
+    #     log_pdf_v += scipy.stats.norm.logpdf(v_M[1:], 0, v_prior['stddev'])
 
     return log_pdf_t + log_pdf_w + log_pdf_v
 
@@ -66,13 +77,38 @@ def calc_score(list_of_z_D, phi_RM, t_R):
         using Monte-Carlo approximation to marginal likelihood
     '''
     S = len(list_of_z_D)
+    M = list_of_z_D[0].shape[0] // 2
+    R = t_R.shape[0]
+
+    log_pp_R = np.zeros((R,))
+    # pp_R = np.zeros((R,))
+    pp_RS = np.zeros((R, S))
+
     for ss in range(S):
         z_ss_D = list_of_z_D[ss]
-        # Compute score formula for ss-th sample (see instructions)
-        # Hint: Use unpack_mean_N_and_stddev_N
+
+        # w_ss_M = z_ss_D[:M]
+        # v_ss_M = z_ss_D[M:]
+        w_ss_R, v_ss_R = unpack_mean_N_and_stddev_N(z_ss_D, phi_RM)
+
+        # print(scipy.stats.norm.logpdf(t_R, w_ss_M, v_ss_M).shape)
+        pp_RS[:, ss] = scipy.stats.norm.logpdf(t_R, w_ss_R, v_ss_R)
+
+        # pp_R += np.exp(scipy.stats.norm.logpdf(t_R, np.matmul(phi_RM, w_ss_M), softplus(np.matmul(phi_RM, v_ss_M))))
+    
+    log_pp_R = scipy.special.logsumexp(pp_RS, axis=-1)
+    # print("R?: ", log_pp_R.shape)
+    # print("R: ", R)
+    # print("S: ", S)
+        
+    
+    # log_pp_R = np.log(pp_R)
+    
+    score = np.sum(log_pp_R)/R - np.log(S)
+
     # TODO aggregate across all S samples
     # Hint: use scipy.special.logsumexp to be numerically stable
-    return 0.0 # TODO FIXME
+    return score # TODO FIXME
 
 
 def unpack_mean_N_and_stddev_N(z_D, phi_NM):
@@ -188,7 +224,7 @@ if __name__ == '__main__':
 
     x_tr_N1, t_tr_N, x_test_R1, t_test_R = load_bird_data(data_dir='../data/')
 
-    order = 0
+    order = 2
     B = 200 # Num Burnin samples
     S = 500 # Num Keep samples
     random_state = 101

@@ -184,6 +184,7 @@ class RandomWalkSampler(object):
                 # target_sigma = np.array([])
                 # A = 1.0 # TODO FIXME
                 A = np.exp(self.calc_tilde_log_pdf(zprime_D))/np.exp(self.calc_tilde_log_pdf(z_D))
+                # print(A.shape)
                 did_accept = u_accept<A # TODO FIXME 
                 # print(A)
                 if did_accept:
