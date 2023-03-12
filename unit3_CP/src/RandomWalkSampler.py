@@ -175,16 +175,21 @@ class RandomWalkSampler(object):
                 # TODO construct proposed vector from z_D
                 # Hint: Recall eps_D ~ [Norm(0.0, 1.0), ... Norm(0.0, 1.0)]
                 # Want to transform eps_D to get zprime_D ~ N(z_D, rw_stddev_D)
-                zprime_D = np.zeros(self.D) # TODO FIXME
+                # zprime_D = np.zeros(self.D) # TODO FIXME
+                zprime_D = rw_stddev_D*eps_D+z_D
 
                 # TODO compute accept ratio
                 # for proposed move from z_D to zprime_D
-                A = 1.0 # TODO FIXME
-                did_accept = True # TODO FIXME 
+                # target_mu = np.array([-1.0, 1.0])
+                # target_sigma = np.array([])
+                # A = 1.0 # TODO FIXME
+                A = np.exp(self.calc_tilde_log_pdf(zprime_D))/np.exp(self.calc_tilde_log_pdf(z_D))
+                did_accept = u_accept<A # TODO FIXME 
+                # print(A)
                 if did_accept:
                     # Accepted proposal.
                     # TODO update the sampler state to its new value
-                    znew_D = 1.0 * z_D # TODO FIXME
+                    znew_D = 1.0 * zprime_D # TODO FIXME
 
                     n_accept += 1
                     did_accept_SP[s, p] = 1

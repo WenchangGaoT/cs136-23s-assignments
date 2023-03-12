@@ -34,7 +34,10 @@ def calc_target_log_pdf(z_D):
         Log probability density function value at provided input
     '''
     # TODO compute logpdf of target distribution at z_D
-    return -0.5 * np.sum(np.square(z_D)) # TODO FIXME
+    mu = np.array([-1.0, 1.0])
+    sigma = np.array([[2.0, 0.95], [0.95, 1.0]])
+    return scipy.stats.multivariate_normal.logpdf(z_D, mean=(mu), cov=sigma)
+    # return -0.5 * np.sum(np.square(z_D)) # TODO FIX ME
 
 if __name__ == '__main__':
     n_burnin_samples = 5000   
@@ -62,15 +65,20 @@ if __name__ == '__main__':
 
         # TODO Create samplers and run them for specified num iterations
         # Make sure to provide rw_stddev_D and random_state as args
+        sampler = RandomWalkSampler(calc_target_log_pdf, [rw_stddev_D], random_state)
 
         # TODO Stack list of samples into a 2D array of size (S, D)
         # Remember, the samples in returned list *already discard* burnin
-        zA_SD = prng.randn(n_keep_samples, 2)  # FIXME
-        zB_SD = prng.randn(n_keep_samples, 2)  # FIXME
+        # zA_SD = prng.randn(n_keep_samples, 2)  # FIXME
+        zA_SD, infoA = sampler.draw_samples(z_initA_D, n_keep_samples, n_keep_samples)
+        # print(zA_SD)
+        # zB_SD = prng.randn(n_keep_samples, 2)  # FIXME
+        zB_SD, infoB = sampler.draw_samples(z_initB_D, n_keep_samples, n_burnin_samples)
+        zA_SD, zB_SD = np.array(zA_SD), np.array(zB_SD)
 
         # TODO unpack info about accept rates
-        arA = 0.0 # FIXME use infoA returned by samplerA.draw_samples(...)
-        arB = 0.0 # FIXME use infoB returned by samplerA.draw_samples(...)
+        arA = infoA["accept_rate"] # FIXME use infoA returned by samplerA.draw_samples(...)
+        arB = infoB["accept_rate"] # FIXME use infoB returned by samplerA.draw_samples(...)
 
         # Plot samples as scatterplot
         # Use small alpha transparency to visually debug rare/frequent samples
