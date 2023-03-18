@@ -36,9 +36,8 @@ def calc_joint_log_pdf(z_D, t_N, phi_NM, w_prior, v_prior):
     # print(v_prior)
 
     # Unpack vector z into constituent parts
-    w_M = z_D[:M, np.newaxis]
-    # print(w_M.shape)
-    v_M = z_D[M:, np.newaxis]
+    w_M = z_D[:M]
+    v_M = z_D[M:]
 
     mean, sigma = unpack_mean_N_and_stddev_N(z_D, phi_NM)
 
@@ -77,33 +76,20 @@ def calc_score(list_of_z_D, phi_RM, t_R):
         using Monte-Carlo approximation to marginal likelihood
     '''
     S = len(list_of_z_D)
-    M = list_of_z_D[0].shape[0] // 2
+    # M = list_of_z_D[0].shape[0] // 2
     R = t_R.shape[0]
 
     log_pp_R = np.zeros((R,))
-    # pp_R = np.zeros((R,))
     pp_RS = np.zeros((R, S))
 
     for ss in range(S):
         z_ss_D = list_of_z_D[ss]
-
-        # w_ss_M = z_ss_D[:M]
-        # v_ss_M = z_ss_D[M:]
         w_ss_R, v_ss_R = unpack_mean_N_and_stddev_N(z_ss_D, phi_RM)
 
-        # print(scipy.stats.norm.logpdf(t_R, w_ss_M, v_ss_M).shape)
         pp_RS[:, ss] = scipy.stats.norm.logpdf(t_R, w_ss_R, v_ss_R)
+    
+    log_pp_R = scipy.special.logsumexp(pp_RS, axis=1)
 
-        # pp_R += np.exp(scipy.stats.norm.logpdf(t_R, np.matmul(phi_RM, w_ss_M), softplus(np.matmul(phi_RM, v_ss_M))))
-    
-    log_pp_R = scipy.special.logsumexp(pp_RS, axis=-1)
-    # print("R?: ", log_pp_R.shape)
-    # print("R: ", R)
-    # print("S: ", S)
-        
-    
-    # log_pp_R = np.log(pp_R)
-    
     score = np.sum(log_pp_R)/R - np.log(S)
 
     # TODO aggregate across all S samples
