@@ -97,7 +97,13 @@ def calc_neg_log_lik(x_ND, log_pi_K, mu_KD, stddev_KD):
     K = mu_KD.shape[0]
 
     ## TODO write code to compute the negative log likelihood
-    neg_log_lik_placeholder = ag_np.sum(mu_KD)
+    # neg_log_lik_placeholder = ag_np.sum(mu_KD)
+    neg_log_lik_placeholder = 0.
+    for k in range(K):
+        neg_log_lik_placeholder += -logsumexp(log_pi_K[k]+ag_stats.multivariate_normal.logpdf(x_ND, mu_KD[k, :], stddev_KD[k, :]))
+    # neg_log_lik_placeholdes = logsumexp(log_pi_K + ag_stats.multivariate_normal.logpdf(x_ND, mu_KD, stddev_KD))
+    # print(neg_log_lik_placeholder.shape)
+
     ## Make sure this code is differentiable with autograd
     ## This means:
     ## * use ag_np instead of np for any numpy routines
