@@ -111,20 +111,34 @@ class GMM_PenalizedMLEstimator_EM(GMM_PenalizedMLEstimator):
 
     def estep__calc_r_NK(self, x_ND):
         N = x_ND.shape[0]
-        r_NK = np.zeros((N, self.K), dtype=np.float64)
+        # if N == 0:
+        #     print("N == 0!!!!!!!!!!!!!!!!!!!!!")
+        # r_NK = np.zeros((N, self.K), dtype=np.float64)
 
-        log_r_NK = np.zeros_like(r_NK, dtype=np.float64)
-        for k in range(self.K):
-            log_r_NK[:, k] = self.log_pi_K[k]
-            # for d in range(self.D):
-            #     log_r_NK[:, k] += stats.norm.logpdf(x_ND[:, d], self.mu_KD[k, d], self.stddev_KD[k, d])
-            log_r_NK[:, k] += stats.multivariate_normal.logpdf(x_ND, mean=self.mu_KD[k, :], cov=self.stddev_KD[k, :]**2)
+        # deno = logsumexp(np.sum(stats.norm.logpdf(x_ND[:, np.newaxis, :], self.mu_KD, self.stddev_KD), axis=2)+self.log_pi_K[np.newaxis, :], axis=1)
+        # print(dem.shape)
+        # reshaped_deno = np.zeros((N, self.K))
+        # for k in range(self.K):
+        #     r_NK[:, k] = np.sum(stats.norm.logpdf(x_ND, self.mu_KD[k], self.stddev_KD[k]), axis=1) + self.log_pi_K[k]
+        #     reshaped_deno[:, k] = deno
+        # r_NK -= reshaped_deno
+        # r_NK = np.exp(r_NK)
+        log_r_NK = (self.log_pi_K[np.newaxis, :]+np.sum(stats.norm.logpdf(x_ND[:,np.newaxis,:], self.mu_KD, self.stddev_KD), axis=2)) - \
+                    logsumexp(self.log_pi_K[np.newaxis, :]+np.sum(stats.norm.logpdf(x_ND[:, np.newaxis, :], self.mu_KD, self.stddev_KD),axis=2), axis=1, keepdims=True)
+        r_NK = np.exp(log_r_NK)
 
-        log_deno = logsumexp(log_r_NK, axis=1)
+        # log_r_NK = np.zeros_like(r_NK, dtype=np.float64)
+        # for k in range(self.K):
+        #     log_r_NK[:, k] = self.log_pi_K[k]
+        #     # for d in range(self.D):
+        #     #     log_r_NK[:, k] += stats.norm.logpdf(x_ND[:, d], self.mu_KD[k, d], self.stddev_KD[k, d])
+        #     log_r_NK[:, k] += stats.multivariate_normal.logpdf(x_ND, mean=self.mu_KD[k, :], cov=self.stddev_KD[k, :]**2)
+
+        # log_deno = logsumexp(log_r_NK, axis=1)
         # for k in range(self.K):
         #     log_r_NK[:, k] -= log_deno
-        log_r_NK -= log_deno.reshape(-1, 1)
-        r_NK = np.exp(log_r_NK)
+        # log_r_NK -= log_deno.reshape(-1, 1)
+        # r_NK = np.exp(log_r_NK)
         # r_NK = np.exp(log_r_NK)/np.exp(log_deno).reshape(-1,1)
         # r_NK = np.exp(log_r_NK)
 
@@ -137,17 +151,25 @@ class GMM_PenalizedMLEstimator_EM(GMM_PenalizedMLEstimator):
         # log_pi_K = np.log(np.mean(r_NK, axis=0))
         N, K = r_NK.shape
         log_pi_K = np.log(np.sum(r_NK, axis=0)/N)
-        if not np.allclose(logsumexp(log_pi_K), 0.0):
-            print(r_NK)
         assert np.allclose(logsumexp(log_pi_K), 0.0)
         return log_pi_K
 
     def mstep__update_mu_KD(self, r_NK, x_ND):
         mu_KD = np.zeros((self.K, self.D)) # FIXME
+        # log_r_NK = np.log(r_NK)
 
         for k in range(self.K):
             # for d in range(self.D):
-            mu_KD[k, :] = np.sum(x_ND*r_NK[:, k].reshape(-1,1), axis=0)/np.sum(r_NK[:, k])
+            # if np.sum(r_NK[:, k]) == 0:
+            #     print(np.sum(r_NK[:, k]))
+            #     print(self.log_pi_K[k])
+            #     print(self.mu_KD[k])
+            #     print(self.stddev_KD[k])
+            # deno = logsumexp(log_r_NK[:, k])
+            deno = np.sum(r_NK[:, k]) + 1e-16
+            nume = np.sum(x_ND*r_NK[:, k].reshape(-1,1), axis=0)
+            # log_nume = np.log(nume)
+            mu_KD[k, :] = nume/deno
 
         return mu_KD
 
@@ -160,15 +182,15 @@ class GMM_PenalizedMLEstimator_EM(GMM_PenalizedMLEstimator):
 
         for k in range(self.K):
             temp_ND = x_ND-self.mu_KD[k, :]
-            temp_ND = temp_ND ** 2
+            temp_ND = temp_ND**2
             
-            nomi = np.sum(r_NK[:, k].reshape(-1,1)*temp_ND, axis=0)+1./m/s
-            deno = np.sum(r_NK[:, k])+1./(s*m*m)
-            stddev_KD[k, :] = nomi/deno
-            # assert (stddev_KD[k, :] >= m).all()
-            stddev_KD[k, :] = np.sqrt(stddev_KD[k, :])
+            nume = np.log(np.sum(r_NK[:, k].reshape(-1,1)*temp_ND, axis=0)+1./(m*s))
+            deno = np.log(np.sum(r_NK[:, k])+1./(s*m*m))
+            stddev_KD[k, :] = np.exp(nume-deno)
+            # stddev_KD[k, :] = np.sqrt(stddev_KD[k, :])
+            # if (stddev_KD[k, :] == np.nan).any(): print("!")
             # print(stddev_KD)
-        # stddev_KD = np.sqrt(stddev_KD)
+        stddev_KD = np.sqrt(stddev_KD)
         return stddev_KD
 
     def fit(self, x_ND, x_valid_ND=None, verbose=True):

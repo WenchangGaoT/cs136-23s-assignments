@@ -88,25 +88,17 @@ def calc_neg_log_lik(x_ND, log_pi_K, mu_KD, stddev_KD):
     neg_log_lik_placeholder = np.sum(mu_KD) # FIXME
     neg_log_lik_placeholder = 0.
 
-    # for k in range(K):
-    #     # print((log_pi_K[k]+stats.multivariate_normal.logpdf(x_ND, mu_KD[k, :], stddev_KD[k, :])).shape)
-    #     neg_log_lik_placeholder += -logsumexp(log_pi_K[k]+stats.multivariate_normal.logpdf(x_ND, mu_KD[k, :], stddev_KD[k, :]))
-    # for n in range(N):
-    #     for k in range(K):
-    #         log_norm = 0.
-    #         for d in range(D):
-    #             log_norm += stats.norm.logpdf(x_ND[n, d], mu_KD[k, d], stddev_KD[k, d])
-    #         log_lik  = log_pi_K[k] + log_norm
     temp_NK = np.zeros((N, K), dtype=np.float64)
     for k in range(K):
         # temp_NK[:, k] = np.ones((N), dtype=np.float64)
         # for d in range(D):
         #     temp_NK[:, k] += stats.norm.logpdf(x_ND[:, d], mu_KD[k, d], stddev_KD[k, d])
-        temp_NK[:, k] = stats.multivariate_normal.logpdf(x_ND, mu_KD[k, :], stddev_KD[k, :]**2)
-        temp_NK[:, k] += log_pi_K[k]
+        temp_NK[:, k] = np.sum(stats.norm.logpdf(x_ND, mu_KD[k, :], stddev_KD[k, :]), axis=1)+log_pi_K[k]
     neg_log_lik_placeholder = logsumexp(temp_NK, axis=1)
     # print(neg_log_lik_placeholder.shape)
     neg_log_lik_placeholder = -np.sum(neg_log_lik_placeholder)
+    log_lik = np.sum(logsumexp(log_pi_K[np.newaxis, :]+ \
+                               np.sum(stats.norm.logpdf(x_ND[:, np.newaxis, :], mu_KD, stddev_KD), axis=2), axis=1))
 
-    return neg_log_lik_placeholder
+    return -log_lik
 

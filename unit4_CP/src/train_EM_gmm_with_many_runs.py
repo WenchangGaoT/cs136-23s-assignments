@@ -27,10 +27,14 @@ if __name__ == '__main__':
     x_train_ND = pd.read_csv("../data/%s_x_train.csv" % dataset_name).values
     x_valid_ND = pd.read_csv("../data/%s_x_valid.csv" % dataset_name).values
     # TODO load test data
+    x_test_ND = pd.read_csv('../data/%s_x_test.csv' % dataset_name).values
 
     N, D = x_train_ND.shape
+    N_test = x_test_ND.shape[0]
     K_list = [1, 4, 8, 16]
+    # K_list = [16]
     seed_list = [1001, 3001, 4001, 7001]
+    # seed_list=[1001]
     max_iter = 20
 
     # Create directory to store results, if it doesn't exist already
@@ -57,9 +61,12 @@ if __name__ == '__main__':
                 bbox_inches=0, pad_inches='tight')
 
             cur_score = gmm_em.history['valid_score_per_pixel'][-1]
-
+            test_score = gmm_em.score(x_test_ND)/(N_test*D)
+            # print(test_score)
+            print("Test Score: %9.6f" % (test_score))
         ## TODO determine which run was "best" in validation likelihood
         ## TODO assess best model on test data
+
         
 
 
